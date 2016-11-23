@@ -1,17 +1,15 @@
-package com.jgross.xbot.bot;
+package com.jgross.xbot.model;
+
+import com.jgross.xbot.networking.Connection;
 
 import java.util.List;
-
-import com.jgross.xbot.model.HipchatUser;
-import com.jgross.xbot.model.Room;
-import com.jgross.xbot.networking.Connection;
 
 public interface Bot {
     
     /**
      * This method is called whenever a message is received
      */
-    public void receiveMessage(String message, String from, Room room);
+    public void receiveMessage(String message, String from, ChatRoom chatRoom);
     
     /**
      * This method is called after the bot connects and logins.
@@ -28,37 +26,37 @@ public interface Bot {
     /**
      * Send a message to the currently selected room. You can get the currently
      * selected room by calling {@link Bot#getSelectedRoom()} and change the currently
-     * selected room by calling {@link Bot#changeRoom(Room)}
+     * selected room by calling {@link Bot#changeRoom(ChatRoom)}
      * @param message The body of the message to send
      */
     public void sendMessage(String message);
     
     /**
-     * Send a message to the room provided. You can also send the message by calling
-     * {@link Room#sendMessage(String, String)}
+     * Send a message to the chatRoom provided. You can also send the message by calling
+     * {@link ChatRoom#sendMessage(String, String)}
      * @param message The body of the message to send
-     * @param room The room object to send this message to.
+     * @param chatRoom The chatRoom object to send this message to.
      */
-    public void sendMessage(String message, Room room);
+    public void sendMessage(String message, ChatRoom chatRoom);
     
     /**
-     * Change the currently selected room. You can get the currently selected room by
+     * Change the currently selected chatRoom. You can get the currently selected chatRoom by
      * calling {@link Bot#getSelectedRoom()}
-     * @param room The room object to change to
+     * @param chatRoom The chatRoom object to change to
      */
-    public void changeRoom(Room room);
+    public void changeRoom(ChatRoom chatRoom);
     
     /**
      * Get the currently selected room
      * @return The room object that is currently selected
      */
-    public Room getSelectedRoom();
+    public ChatRoom getSelectedRoom();
     
     /**
-     * Get an unmodifiable list of {@link HipchatUser}'s. These users may be offline, online, or may be deleted.
+     * Get an unmodifiable list of {@link ChatUser}'s. These users may be offline, online, or may be deleted.
      * @return
      */
-    public List<HipchatUser> getUsers();
+    public List<ChatUser> getUsers();
     
     /**
      * The username this bot will login into the server with.

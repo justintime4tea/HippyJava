@@ -1,22 +1,22 @@
 package com.jgross.xbot.eventsystem.events;
 
 import com.jgross.xbot.eventsystem.Event;
-import com.jgross.xbot.model.Room;
+import com.jgross.xbot.model.ChatRoom;
 
 public abstract class RoomEvent extends Event {
     
-    private Room room;
+    private ChatRoom chatRoom;
     
-    public RoomEvent(Room room) {
-        this.room = room;
+    public RoomEvent(ChatRoom chatRoom) {
+        this.chatRoom = chatRoom;
     }
     
     /**
-     * Get the room that this event is associated with.
+     * Get the chatRoom that this event is associated with.
      * @return
      */
-    public Room getRoom() {
-        return room;
+    public ChatRoom getChatRoom() {
+        return chatRoom;
     }
 
 }

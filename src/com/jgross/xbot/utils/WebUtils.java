@@ -7,7 +7,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class WebUtils {
-    
+    // TODO: Remove
     /**
      * Returns the response from the given URL as a single line of text.
      * At the end of each line, there will be a \n appened to it.

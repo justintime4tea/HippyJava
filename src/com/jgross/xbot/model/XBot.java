@@ -1,4 +1,4 @@
-package com.jgross.xbot.bot;
+package com.jgross.xbot.model;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,8 +12,6 @@ import java.util.List;
 
 import com.jgross.xbot.XBotLib;
 import com.jgross.xbot.eventsystem.Listener;
-import com.jgross.xbot.model.HipchatUser;
-import com.jgross.xbot.model.Room;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPException;
 
@@ -23,10 +21,10 @@ import com.jgross.xbot.networking.Connection;
 import com.jgross.xbot.utils.NotificationColor;
 import com.jgross.xbot.utils.NotificationType;
 
-public abstract class HippyBot implements Bot, Listener {
+public abstract class XBot implements Bot, Listener {
 
     private Connection con;
-    private Room selected;
+    private ChatRoom selected;
 
     @Override
     public void run(Connection con) {
@@ -34,7 +32,7 @@ public abstract class HippyBot implements Bot, Listener {
             @SuppressWarnings("unused")
             @EventHandler
             public void messageEvent(MessageRecivedEvent event) {
-                receiveMessage(event.body(), event.from(), event.getRoom());
+                receiveMessage(event.body(), event.from(), event.getChatRoom());
             }
         });
         this.con = con;
@@ -57,8 +55,8 @@ public abstract class HippyBot implements Bot, Listener {
 
     /**
      * Change the currently selected room. You must be in the room in order to change to it, to join a room, invoke the method
-     * {@link HippyBot#joinRoom(String)}.
-     * The room name provide must be the JID name of the room. If {@link HippyBot#apiKey()} returns a valid
+     * {@link XBot#joinRoom(String)}.
+     * The room name provide must be the JID name of the room. If {@link XBot#apiKey()} returns a valid
      * API Key, then the room name provided can be the normal name of the room.
      * @param name
      */
@@ -69,7 +67,7 @@ public abstract class HippyBot implements Bot, Listener {
     
     /**
      * Join a room with the given name.
-     * The room name provided must be the JID name of the room. If {@link HippyBot#apiKey()} returns a valid API Key, then
+     * The room name provided must be the JID name of the room. If {@link XBot#apiKey()} returns a valid API Key, then
      * the room name provided can be the normal name of the room.
      * @param name
      * @return
@@ -91,18 +89,18 @@ public abstract class HippyBot implements Bot, Listener {
 
 
     @Override
-    public Room getSelectedRoom() {
+    public ChatRoom getSelectedRoom() {
         return selected;
     }
 
     @Override
-    public void changeRoom(Room room) {
-        this.selected = room;
+    public void changeRoom(ChatRoom chatRoom) {
+        this.selected = chatRoom;
     }
 
     /**
      * Send a message a room. You must be connected to the room to send this message, if your not connected to the room, then please
-     * invoke the method {@link HippyBot#joinRoom(String)}
+     * invoke the method {@link XBot#joinRoom(String)}
      * @param name
      *            The name of the room.
      * @param message
@@ -115,7 +113,7 @@ public abstract class HippyBot implements Bot, Listener {
     
     /**
      * Send a private message to someone. The parameter "to" must be the JID URL of the user, you can convert a nick such as
-     * "Bob Joe" to a JID URL by invoking the method {@link HippyBot#nickToJID(String)} and using the String returned as the
+     * "Bob Joe" to a JID URL by invoking the method {@link XBot#nickToJID(String)} and using the String returned as the
      * JID URL.
      * @param message
      *              The message to send.
@@ -126,7 +124,7 @@ public abstract class HippyBot implements Bot, Listener {
      */
     public boolean sendPM(String message, String to) {
         if (to.indexOf("@") == -1) { //oh noes its not a JID! The user didnt follow the rules!
-            HipchatUser user = findUser(to);
+            ChatUser user = findUser(to);
             if (user != null)
                 to = nickToJID(user.getName());
             else //Ok I just dont know anymore
@@ -150,7 +148,7 @@ public abstract class HippyBot implements Bot, Listener {
      * @return
      *        Whether this operation was successful or not.
      */
-    public boolean sendPM(String message, HipchatUser user) {
+    public boolean sendPM(String message, ChatUser user) {
         return sendPM(message, nickToJID(user.getName()));
     }
     
@@ -173,38 +171,38 @@ public abstract class HippyBot implements Bot, Listener {
     }
 
     @Override
-    public void sendMessage(String message, Room room) {
-        room.sendMessage(message, nickname());
+    public void sendMessage(String message, ChatRoom chatRoom) {
+        chatRoom.sendMessage(message, nickname());
     }
 
     /**
-     * Get an unmodifiable list of {@link HipchatUser}'s. These users may be offline, online, or may be deleted. </br>
-     * In order for this method to work properly, the {@link HippyBot#apiKey()} method must return a valid API Key, otherwise this method will
+     * Get an unmodifiable list of {@link ChatUser}'s. These users may be offline, online, or may be deleted. </br>
+     * In order for this method to work properly, the {@link XBot#apiKey()} method must return a valid API Key, otherwise this method will
      * return an empty list.
      * @return
      */
     @Override
-    public List<HipchatUser> getUsers() {
-        ArrayList<HipchatUser> users = new ArrayList<HipchatUser>();
+    public List<ChatUser> getUsers() {
+        ArrayList<ChatUser> users = new ArrayList<ChatUser>();
         if (apiKey().equals(""))
             return Collections.unmodifiableList(users);
-        HipchatUser[] u = HipchatUser.getHipchatUsers(apiKey());
-        for (HipchatUser user : u) {
+        ChatUser[] u = ChatUser.getHipchatUsers(apiKey());
+        for (ChatUser user : u) {
             users.add(user);
         }
         return Collections.unmodifiableList(users);
     }
     
     /**
-     * Find a HipchatUser by providing a name.
+     * Find a ChatUser by providing a name.
      * This wont check for part of the name and this search is also case sensitive. So "Bob Joe" and "bob joe" will return different results.
      * @param name
      *            The name to search for.
      * @return
-     *        The HipchatUser object or null if none is found.
+     *        The ChatUser object or null if none is found.
      */
-    public HipchatUser findUser(String name) {
-        for (HipchatUser u : getUsers()) {
+    public ChatUser findUser(String name) {
+        for (ChatUser u : getUsers()) {
             if (u.getName().equals(name))
                 return u;
         }
@@ -212,12 +210,12 @@ public abstract class HippyBot implements Bot, Listener {
     }
 
     /**
-     * Send a hipchat notification to the currently selected room specified in {@link HippyBot#getSelectedRoom()} with the name specified in {@link HippyBot#nickname()}. If no room is selected, then the message is not sent.
+     * Send a hipchat notification to the currently selected room specified in {@link XBot#getSelectedRoom()} with the name specified in {@link XBot#nickname()}. If no room is selected, then the message is not sent.
      * This method will only accept normal text as input,
-     * if you wish to use HTML, please use {@link HippyBot#sendNotification(String, String, Room, NotificationType). </br>
+     * if you wish to use HTML, please use {@link XBot#sendNotification(String, String, ChatRoom, NotificationType). </br>
      * The background color for this notification will be set to {@link NotificationColor#YELLOW} and users will be notified when this
      * notification is sent. </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send.
      * @throws IOException 
@@ -230,12 +228,12 @@ public abstract class HippyBot implements Bot, Listener {
     }
 
     /**
-     * Send a hipchat notification to the currently selected room specified in {@link HippyBot#getSelectedRoom()}. If no room is selected, then the message is not sent.
+     * Send a hipchat notification to the currently selected room specified in {@link XBot#getSelectedRoom()}. If no room is selected, then the message is not sent.
      * This method will only accept normal text as input,
-     * if you wish to use HTML, please use {@link HippyBot#sendNotification(String, String, Room, NotificationType). </br>
+     * if you wish to use HTML, please use {@link XBot#sendNotification(String, String, ChatRoom, NotificationType). </br>
      * The background color for this notification will be set to {@link NotificationColor#YELLOW} and users will be notified when this
      * notification is sent. </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send.
      * @param from
@@ -250,11 +248,11 @@ public abstract class HippyBot implements Bot, Listener {
     }
 
     /**
-     * Send a hipchat notification to the room specified. This method will only accept normal text as input,
-     * if you wish to use HTML, please use {@link HippyBot#sendNotification(String, String, Room, NotificationType). </br>
+     * Send a hipchat notification to the chatRoom specified. This method will only accept normal text as input,
+     * if you wish to use HTML, please use {@link XBot#sendNotification(String, String, ChatRoom, NotificationType). </br>
      * The background color for this notification will be set to {@link NotificationColor#YELLOW} and users will be notified when this
      * notification is sent. </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send.
      * @param from
@@ -264,16 +262,16 @@ public abstract class HippyBot implements Bot, Listener {
      * @throws IOException 
      * @return The json response from the server
      */
-    public String sendNotification(String message, String from, Room room) {
-        return sendNotification(message, from, room, NotificationType.TEXT, true, NotificationColor.YELLOW);
+    public String sendNotification(String message, String from, ChatRoom chatRoom) {
+        return sendNotification(message, from, chatRoom, NotificationType.TEXT, true, NotificationColor.YELLOW);
     }
 
     /**
      * Send a hipchat notification to the room specified. This method will only accept normal text as input,
-     * if you wish to use HTML, please use {@link HippyBot#sendNotification(String, String, Room, NotificationType)}
+     * if you wish to use HTML, please use {@link XBot#sendNotification(String, String, ChatRoom, NotificationType)}
      * The background color for this notification will be set to {@link NotificationColor#YELLOW} and users will be notified when this
      * notification is sent. </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send.
      * @param from
@@ -284,25 +282,25 @@ public abstract class HippyBot implements Bot, Listener {
      * @return The json response from the server
      */
     public String sendNotification(String message, String from, String room) {
-        Room r = findRoom(room);
+        ChatRoom r = findRoom(room);
         if (r == null)
             return "{\"status\": \"failed\"}";
         return sendNotification(message, from, r, NotificationType.TEXT, true, NotificationColor.YELLOW);
     }
 
     /**
-     * Send a hipchat notification to the room specified. You may use HTML if the {@link NotificationType} in the param is
+     * Send a hipchat notification to the chatRoom specified. You may use HTML if the {@link NotificationType} in the param is
      * set to {@link NotificationType#HTML}. </br>
      * The background color for this notification will be set to {@link NotificationColor#YELLOW} and users will be notified when this
      * notification is sent. </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send. You may input html into this by setting the
      *               type parameter to {@link NotificationType#HTML}
      * @param from
      *            The name to use in the notification.
-     * @param room
-     *            The room to send this notification to.
+     * @param chatRoom
+     *            The chatRoom to send this notification to.
      * @param type
      *            The type of message to send. If {@link NotificationType#HTML} is chosen, then this message receives no special treatment.
      *            This must be valid HTML and entities must be escaped. @see  NotificationType#HTML for more info. </br>
@@ -310,22 +308,22 @@ public abstract class HippyBot implements Bot, Listener {
      * @throws IOException 
      * @return The json response from the server
      */
-    public String sendNotification(String message, String from, Room room, NotificationType type) {
-        return sendNotification(message, from, room, type, true, NotificationColor.YELLOW);
+    public String sendNotification(String message, String from, ChatRoom chatRoom, NotificationType type) {
+        return sendNotification(message, from, chatRoom, type, true, NotificationColor.YELLOW);
     }
 
     /**
-     * Send a hipchat notification to the room specified. You may use HTML if the {@link NotificationType} in the param is
+     * Send a hipchat notification to the chatRoom specified. You may use HTML if the {@link NotificationType} in the param is
      * set to {@link NotificationType#HTML}. </br>
      * The background color for this notification will be set to {@link NotificationColor#YELLOW} </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send. You may input html into this by setting the
      *               type parameter to {@link NotificationType#HTML}
      * @param from
      *            The name to use in the notification.
-     * @param room
-     *            The room to send this notification to.
+     * @param chatRoom
+     *            The chatRoom to send this notification to.
      * @param type
      *            The type of message to send. If {@link NotificationType#HTML} is chosen, then this message receives no special treatment.
      *            This must be valid HTML and entities must be escaped. @see  NotificationType#HTML for more info. </br>
@@ -336,21 +334,21 @@ public abstract class HippyBot implements Bot, Listener {
      * @throws IOException 
      * @return The json response from the server
      */
-    public String sendNotification(String message, String from, Room room, NotificationType type, boolean notifyusers) {
-        return sendNotification(message, from, room, type, notifyusers, NotificationColor.YELLOW);
+    public String sendNotification(String message, String from, ChatRoom chatRoom, NotificationType type, boolean notifyusers) {
+        return sendNotification(message, from, chatRoom, type, notifyusers, NotificationColor.YELLOW);
     }
 
     /**
-     * Send a hipchat notification to the room specified. You may use HTML if the {@link NotificationType} in the param is
+     * Send a hipchat notification to the chatRoom specified. You may use HTML if the {@link NotificationType} in the param is
      * set to {@link NotificationType#HTML}. </br>
-     * <b>In order to use this method, {@link HippyBot#apiKey()} must return a valid API Key!</b>
+     * <b>In order to use this method, {@link XBot#apiKey()} must return a valid API Key!</b>
      * @param message
      *               The body of the message to send. You may input html into this by setting the
      *               type parameter to {@link NotificationType#HTML}
      * @param from
      *            The name to use in the notification.
-     * @param room
-     *            The room to send this notification to.
+     * @param chatRoom
+     *            The chatRoom to send this notification to.
      * @param type
      *            The type of message to send. If {@link NotificationType#HTML} is chosen, then this message receives no special treatment.
      *            This must be valid HTML and entities must be escaped. @see  NotificationType#HTML for more info. </br>
@@ -363,11 +361,11 @@ public abstract class HippyBot implements Bot, Listener {
      * @return The json response from the server
      * @throws IOException 
      */
-    public String sendNotification(String message, String from, Room room, NotificationType type, boolean notifyusers, NotificationColor color) {
+    public String sendNotification(String message, String from, ChatRoom chatRoom, NotificationType type, boolean notifyusers, NotificationColor color) {
         try {
             URL url = new URL("https://api.hipchat.com/v1/rooms/message?format=json&auth_token=" + apiKey());
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-            String tosend = "room_id=" + room.getHipchatRoomInfo(apiKey()).getID() + "&from=" + from + "&message=" + message.replaceAll(" ", "+") + "&message_format=" + type.getType() + "&notify=" + notifyusers + "&color=" + color.getType();
+            String tosend = "room_id=" + chatRoom.getHipchatRoomInfo(apiKey()).getID() + "&from=" + from + "&message=" + message.replaceAll(" ", "+") + "&message_format=" + type.getType() + "&notify=" + notifyusers + "&color=" + color.getType();
             connection.setDoOutput(true);
             connection.setDoInput(true);
             connection.setRequestMethod("POST");
@@ -396,12 +394,12 @@ public abstract class HippyBot implements Bot, Listener {
      * @return
      *        The room
      */
-    public Room findRoom(String name) {
-        Room r = con.findConnectedRoom(name);
+    public ChatRoom findRoom(String name) {
+        ChatRoom r = con.findConnectedRoom(name);
         if (r == null) {
-            for (Room room : con.getRooms()) {
-                if (room.getTrueName(apiKey()).equals(name))
-                    return room;
+            for (ChatRoom chatRoom : con.getRooms()) {
+                if (chatRoom.getTrueName(apiKey()).equals(name))
+                    return chatRoom;
             }
             return null;
         }
@@ -414,7 +412,7 @@ public abstract class HippyBot implements Bot, Listener {
      * @return
      *        An unmodifiable list of rooms
      */
-    public List<Room> getRooms() {
+    public List<ChatRoom> getRooms() {
         return con.getRooms();
     }
 

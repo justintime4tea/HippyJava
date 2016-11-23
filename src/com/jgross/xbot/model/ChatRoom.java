@@ -18,21 +18,21 @@ import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
 import com.jgross.xbot.eventsystem.events.model.UserLeftRoomEvent;
 
 
-public class Room {
+public class ChatRoom {
     
     private MultiUserChat chat;
     private RoomInfo info;
     private String subject;
     private String name;
-    private HipchatRoomInfo hinfo;
+    private ChatRoomInfo hinfo;
     private ArrayList<String> users = new ArrayList<String>();
     private int lastcount;
     private String api_cache;
     private Thread joinchecker;
     private boolean halt;
     
-    public static Room createRoom(String name, MultiUserChat chat, XMPPConnection con) {
-        final Room r = new Room(name, chat);
+    public static ChatRoom createRoom(String name, MultiUserChat chat, XMPPConnection con) {
+        final ChatRoom r = new ChatRoom(name, chat);
         try {
             r.info = MultiUserChat.getRoomInfo(con, (name.indexOf("@") != -1 ? name : name + "@" + CONF_URL));
         } catch (XMPPException e) {
@@ -51,28 +51,28 @@ public class Room {
         return r;
     }
     
-    public static Room createRoom(String APIKey, String name, MultiUserChat chat, XMPPConnection con) {
-        Room r = createRoom(name, chat, con);
+    public static ChatRoom createRoom(String APIKey, String name, MultiUserChat chat, XMPPConnection con) {
+        ChatRoom r = createRoom(name, chat, con);
         if (APIKey != null && !APIKey.equals(""))
-            r.hinfo = HipchatRoomInfo.getInfo(APIKey, r);
+            r.hinfo = ChatRoomInfo.getInfo(APIKey, r);
         r.api_cache = APIKey;
         return r;
     }
     
-    public static Room createRoom(String APIKey, String name) {
-        Room r = new Room(name);
-        r.hinfo = HipchatRoomInfo.getInfo(APIKey, r);
+    public static ChatRoom createRoom(String APIKey, String name) {
+        ChatRoom r = new ChatRoom(name);
+        r.hinfo = ChatRoomInfo.getInfo(APIKey, r);
         r.subject = r.hinfo.getTopic();
         r.api_cache = APIKey;
         return r;
     }
     
-    private Room(String name, MultiUserChat chat) {
+    private ChatRoom(String name, MultiUserChat chat) {
         this.name = name;
         this.chat = chat;
     }
     
-    private Room(String name) {
+    private ChatRoom(String name) {
         this.name = name;
     }
     
@@ -99,7 +99,7 @@ public class Room {
     /**
      * Get the current amount of useres in this room.
      * If this room is not connected, then this method may return -1.
-     * To test the connection of this room, then use the method {@link Room#isConnected}
+     * To test the connection of this room, then use the method {@link ChatRoom#isConnected}
      * @return
      */
     public int getUserCount() {
@@ -118,7 +118,7 @@ public class Room {
     
     /**
      * Get the XMPP name of this room. This does NOT include the full XMPP_JID for this room.
-     * If you would like, then use {@link Room#getXMPP_JID}
+     * If you would like, then use {@link ChatRoom#getXMPP_JID}
      * @return
      */
     public String getXMPPName() {
@@ -136,14 +136,14 @@ public class Room {
     /**
      * Get the true name for this room. The API key is used to connect to the hipchat API to get
      * the room information for this room. However, this is used as a fall back, if the room info has already been obtained recently, then
-     * this parameter wont be used. If you think that you wont need an API Key for this call, then use {@link Room#getTrueName()}
+     * this parameter wont be used. If you think that you wont need an API Key for this call, then use {@link ChatRoom#getTrueName()}
      * @param APIKey
      *              The API Key for your hipchat account to obtain information for this room.
      * @return
      */
     public String getTrueName(String APIKey) {
         if (hinfo == null) {
-            hinfo = HipchatRoomInfo.getInfo(APIKey, this);
+            hinfo = ChatRoomInfo.getInfo(APIKey, this);
             if (hinfo == null)
                 return null;
         }
@@ -164,21 +164,21 @@ public class Room {
      * Get basic information from hipchat about this room.
      * @return
      */
-    public HipchatRoomInfo getHipchatRoomInfo() {
+    public ChatRoomInfo getHipchatRoomInfo() {
         return hinfo;
     }
     
     /**
      * Get basic information from hipchat about this room. The API key is used to connect to the hipchat API to get
      * the room information for this room. However, this is used as a fall back, if the room info has already been obtained recently, then
-     * this parameter wont be used. If you think that you wont need an API Key for this call, then use {@link Room#getHipchatRoomInfo()}
+     * this parameter wont be used. If you think that you wont need an API Key for this call, then use {@link ChatRoom#getHipchatRoomInfo()}
      * @param APIKey
      *               The API Key for your hipchat account to obtain information for this room.
      * @return
      */
-    public HipchatRoomInfo getHipchatRoomInfo(String APIKey) {
+    public ChatRoomInfo getHipchatRoomInfo(String APIKey) {
         if (hinfo == null) {
-            hinfo = HipchatRoomInfo.getInfo(APIKey, this);
+            hinfo = ChatRoomInfo.getInfo(APIKey, this);
             if (hinfo == null)
                 return null;
         }
@@ -187,7 +187,7 @@ public class Room {
     
     /**
      * Get the current subject for this room. If the subject is null or equals "", then the subject will be gotten from the active connection
-     * to the room. If no active connection is present, then it will fall back to using {@link Room#getHipchatRoomInfo()} to get the topic.
+     * to the room. If no active connection is present, then it will fall back to using {@link ChatRoom#getHipchatRoomInfo()} to get the topic.
      * If that is null, then a null or empty subject may be returned.
      * @return
      */
@@ -261,24 +261,24 @@ public class Room {
                         List<String> connected = getConnectedUsers();
                         for (String nick : connected) {
                             if (!users.contains(nick)) { //connected
-                                HipchatUser user = null;
+                                ChatUser user = null;
                                 if (api_cache != null && !api_cache.equals(""))
-                                    user = HipchatUser.createInstance(nick.split("\\/")[1], api_cache);
+                                    user = ChatUser.createInstance(nick.split("\\/")[1], api_cache);
                                 users.add(nick);
                                 lastcount = getUserCount();
-                                UserJoinedRoomEvent event = new UserJoinedRoomEvent(Room.this, user, nick);
+                                UserJoinedRoomEvent event = new UserJoinedRoomEvent(ChatRoom.this, user, nick);
                                 XBotLib.events.callEvent(event);
                             }
                         }
 
                         for (String nick : users) {
                             if (!connected.contains(nick)) { //disconnected
-                                HipchatUser user = null;
+                                ChatUser user = null;
                                 if (api_cache != null && !api_cache.equals(""))
-                                    user = HipchatUser.createInstance(nick.split("\\/")[1], api_cache);
+                                    user = ChatUser.createInstance(nick.split("\\/")[1], api_cache);
                                 toremove.add(nick);
                                 lastcount = getUserCount();
-                                UserLeftRoomEvent event = new UserLeftRoomEvent(Room.this, user, nick);
+                                UserLeftRoomEvent event = new UserLeftRoomEvent(ChatRoom.this, user, nick);
                                 XBotLib.events.callEvent(event);
                             }
                         }

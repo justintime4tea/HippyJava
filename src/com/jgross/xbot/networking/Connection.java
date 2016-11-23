@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import com.jgross.xbot.model.ChatRoom;
 import com.jgross.xbot.networking.exceptions.LoginException;
 import com.jgross.xbot.XBotLib;
-import com.jgross.xbot.model.Room;
 import com.jgross.xbot.utils.Constants;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -32,7 +32,7 @@ public final class Connection implements MessageListener, ConnectionListener {
     private final XMPPConnection XMPP = new XMPPConnection(CONNECTION_CONFIG);
     private boolean connected;
     private String password;
-    private HashMap<Room, MultiUserChat> rooms = new HashMap<Room, MultiUserChat>();
+    private HashMap<ChatRoom, MultiUserChat> rooms = new HashMap<ChatRoom, MultiUserChat>();
     private HashMap<String, Chat> cache = new HashMap<String, Chat>();
     
     public void connect() throws XMPPException {
@@ -76,7 +76,7 @@ public final class Connection implements MessageListener, ConnectionListener {
             return;
         MultiUserChat muc2;
         if (!isJID(room)) {
-            Room temp = Room.createRoom(APIKey, room);
+            ChatRoom temp = ChatRoom.createRoom(APIKey, room);
             room = temp.getHipchatRoomInfo(APIKey).getJID();
             muc2 = new MultiUserChat(XMPP, room);
             temp = null;
@@ -84,7 +84,7 @@ public final class Connection implements MessageListener, ConnectionListener {
         else
             muc2 = new MultiUserChat(XMPP, (room.indexOf("@") != -1 ? room : room + "@" + Constants.CONF_URL));
         muc2.join(nickname, password);
-        final Room obj = Room.createRoom(APIKey, room, muc2, XMPP);
+        final ChatRoom obj = ChatRoom.createRoom(APIKey, room, muc2, XMPP);
         muc2.addMessageListener(new PacketListener() {
 
             @Override
@@ -99,10 +99,10 @@ public final class Connection implements MessageListener, ConnectionListener {
         rooms.put(obj, muc2);
     }
     
-    public List<Room> getRooms() {
-        ArrayList<Room> roomlist = new ArrayList<Room>();
-        for (Room room : rooms.keySet()) {
-            roomlist.add(room);
+    public List<ChatRoom> getRooms() {
+        ArrayList<ChatRoom> roomlist = new ArrayList<ChatRoom>();
+        for (ChatRoom chatRoom : rooms.keySet()) {
+            roomlist.add(chatRoom);
         }
         return Collections.unmodifiableList(roomlist);
     }
@@ -116,14 +116,14 @@ public final class Connection implements MessageListener, ConnectionListener {
                 return false;
             }
         }
-        Room obj;
+        ChatRoom obj;
         if ((obj = findConnectedRoom(room)) != null)
             return obj.sendMessage(message, nickname);
         return false;
     }
     
-    public Room findConnectedRoom(String name) {
-        for (Room r : getRooms()) {
+    public ChatRoom findConnectedRoom(String name) {
+        for (ChatRoom r : getRooms()) {
             if (r.getXMPPName().equals(name))
                 return r;
         }

@@ -1,7 +1,7 @@
 package com.jgross.xbot.eventsystem.events.model;
 
 import com.jgross.xbot.eventsystem.EventList;
-import com.jgross.xbot.model.Room;
+import com.jgross.xbot.model.ChatRoom;
 import org.jivesoftware.smack.packet.Message;
 
 import com.jgross.xbot.eventsystem.events.RoomEvent;
@@ -12,8 +12,8 @@ public class MessageRecivedEvent extends RoomEvent {
     private static final EventList events = new EventList();
     private Message message;
     
-    public MessageRecivedEvent(Room room, Message message) {
-        super(room);
+    public MessageRecivedEvent(ChatRoom chatRoom, Message message) {
+        super(chatRoom);
         this.message = message;
     }
     

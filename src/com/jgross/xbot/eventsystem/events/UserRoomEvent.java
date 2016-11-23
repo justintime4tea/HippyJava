@@ -1,15 +1,15 @@
 package com.jgross.xbot.eventsystem.events;
 
-import com.jgross.xbot.model.HipchatUser;
-import com.jgross.xbot.model.Room;
+import com.jgross.xbot.model.ChatRoom;
+import com.jgross.xbot.model.ChatUser;
 
 public abstract class UserRoomEvent extends RoomEvent {
 
-    private HipchatUser user;
+    private ChatUser user;
     private String nick;
     
-    public UserRoomEvent(Room room, HipchatUser user, String nick) {
-        super(room);
+    public UserRoomEvent(ChatRoom chatRoom, ChatUser user, String nick) {
+        super(chatRoom);
         this.nick = nick;
         this.user = user;
     }
@@ -20,7 +20,7 @@ public abstract class UserRoomEvent extends RoomEvent {
      * the room was created with an API Key
      * @return
      */
-    public HipchatUser getHipchatUser() {
+    public ChatUser getHipchatUser() {
         return user;
     }
     

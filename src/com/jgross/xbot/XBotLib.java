@@ -7,9 +7,9 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.jgross.xbot.bot.Bot;
+import com.jgross.xbot.model.Bot;
 import com.jgross.xbot.eventsystem.EventSystem;
-import com.jgross.xbot.model.Room;
+import com.jgross.xbot.model.ChatRoom;
 import com.jgross.xbot.networking.Connection;
 import com.jgross.xbot.utils.NotificationColor;
 import com.jgross.xbot.utils.NotificationType;
@@ -107,9 +107,9 @@ public class XBotLib {
     public static String sendNotification(String message, String from, String room_name, String APIKey, NotificationType type, boolean notifyusers, NotificationColor color) throws IOException {
         URL url = new URL("https://api.hipchat.com/v1/rooms/message?format=json&auth_token=" + APIKey);
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        Room room = Room.createRoom(APIKey, room_name);
+        ChatRoom chatRoom = ChatRoom.createRoom(APIKey, room_name);
         from = from.replace(" ", "_");
-        String tosend = "room_id=" + room.getHipchatRoomInfo(APIKey).getID() + "&from=" + from + "&message=" + message.replaceAll(" ", "+") + "&message_format=" + type.getType() + "&notify=" + notifyusers + "&color=" + color.getType();
+        String tosend = "room_id=" + chatRoom.getHipchatRoomInfo(APIKey).getID() + "&from=" + from + "&message=" + message.replaceAll(" ", "+") + "&message_format=" + type.getType() + "&notify=" + notifyusers + "&color=" + color.getType();
         connection.setDoOutput(true);
         connection.setDoInput(true);
         connection.setRequestMethod("POST");

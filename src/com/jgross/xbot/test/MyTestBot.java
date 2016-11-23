@@ -1,15 +1,15 @@
 package com.jgross.xbot.test;
 
+import com.jgross.xbot.model.ChatRoom;
+import com.jgross.xbot.model.XBot;
+
 import java.util.Scanner;
 
-import com.jgross.xbot.bot.HippyBot;
-import com.jgross.xbot.model.Room;
-
-public class MyTestBot extends HippyBot {
+public class MyTestBot extends XBot {
 
     @Override
-    public void receiveMessage(String message, String from, Room room) {
-        System.out.println(from + "(" + room.getTrueName() + ")" + ": " + message);
+    public void receiveMessage(String message, String from, ChatRoom chatRoom) {
+        System.out.println(from + "(" + chatRoom.getTrueName() + ")" + ": " + message);
     }
 
     @Override

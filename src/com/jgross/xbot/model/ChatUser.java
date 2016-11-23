@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 import static com.jgross.xbot.utils.Constants.GSON;
 
-public class HipchatUser {
+public class ChatUser {
     private int user_id;
     private String name;
     private String mention_name;
@@ -17,21 +17,21 @@ public class HipchatUser {
     private String status_message;
     private int is_group_admin;
     private int is_deleted;
-    private static HashMap<String, HipchatUser> user_cache = new HashMap<String, HipchatUser>(); 
+    private static HashMap<String, ChatUser> user_cache = new HashMap<String, ChatUser>();
     
     /**
-     * Return the HipchatUser object that has the name of <b>nick</b>
+     * Return the ChatUser object that has the name of <b>nick</b>
      * @param nick
      *            The nick to get the users for
      * @param APIKey
      *             The API Key to use when using Hipchat's HTTP API
      * @return
-     *        The HipchatUser object with the given nick.
+     *        The ChatUser object with the given nick.
      */
-    public static HipchatUser createInstance(String nick, String APIKey) {
+    public static ChatUser createInstance(String nick, String APIKey) {
         if (!user_cache.containsKey(nick)) {
-            HipchatUser[] users = getHipchatUsers(APIKey);
-            for (HipchatUser user : users) {
+            ChatUser[] users = getHipchatUsers(APIKey);
+            for (ChatUser user : users) {
                 if (!user_cache.containsKey(user.name))
                     user_cache.put(user.name, user);
             }
@@ -46,17 +46,17 @@ public class HipchatUser {
     }
     
     /**
-     * Return the HipchatUser object that has the user id of <b>ID</b>
+     * Return the ChatUser object that has the user id of <b>ID</b>
      * @param ID
      *            The user id to get the users for
      * @param APIKey
      *             The API Key to use when using Hipchat's HTTP API
      * @return
-     *        The HipchatUser object with the given user id.
+     *        The ChatUser object with the given user id.
      */
-    public static HipchatUser createInstance(int ID, String APIKey) {
-        HipchatUser[] users = getHipchatUsers(APIKey);
-        for (HipchatUser user : users) {
+    public static ChatUser createInstance(int ID, String APIKey) {
+        ChatUser[] users = getHipchatUsers(APIKey);
+        for (ChatUser user : users) {
             if (user.user_id == ID)
                 return user;
         }
@@ -64,14 +64,14 @@ public class HipchatUser {
     }
     
     /**
-     * Get an array of HipchatUser objects that the APIKey passed in the parameter has
+     * Get an array of ChatUser objects that the APIKey passed in the parameter has
      * access to.
      * @param APIKey
      *              The API Key to use
      * @return
      *        An array of HipchatUsers
      */
-    public static HipchatUser[] getHipchatUsers(String APIKey) {
+    public static ChatUser[] getHipchatUsers(String APIKey) {
         return getHipchatUserHolder(APIKey).users;
     }
     
@@ -83,12 +83,12 @@ public class HipchatUser {
         } catch (Exception e) {
             e.printStackTrace();
             HipchatUserHolder u = new HipchatUserHolder();
-            u.users = new HipchatUser[0];
+            u.users = new ChatUser[0];
             return u;
         }
     }
     
-    private HipchatUser() { }
+    private ChatUser() { }
     
     public int getUserID() {
         return user_id;
@@ -131,7 +131,7 @@ public class HipchatUser {
     }
     
     private static class HipchatUserHolder {
-        public HipchatUser[] users;
+        public ChatUser[] users;
         public HipchatUserHolder() { }
     }
 }

@@ -5,7 +5,7 @@ import java.util.Date;
 import com.jgross.xbot.utils.WebUtils;
 import com.jgross.xbot.utils.Constants;
 
-public class HipchatRoomInfo {
+public class ChatRoomInfo {
     private int room_id;
     private String name;
     private String topic;
@@ -15,22 +15,22 @@ public class HipchatRoomInfo {
     private boolean is_archived;
     private boolean is_private;
     private String xmpp_jid;
-    private HipchatRoomInfo() { }
+    private ChatRoomInfo() { }
     
-    public static HipchatRoomInfo getInfo(String APIKey, Room room) {
+    public static ChatRoomInfo getInfo(String APIKey, ChatRoom chatRoom) {
         if (APIKey.equals(""))
             return null;
-        HipchatRoomInfo[] data = getRooms(APIKey);
+        ChatRoomInfo[] data = getRooms(APIKey);
         if (data == null)
             return null;
-        for (HipchatRoomInfo h : data) {
-            if (h.equals(room))
+        for (ChatRoomInfo h : data) {
+            if (h.equals(chatRoom))
                 return h;
         }
         return null;
     }
     
-    public static HipchatRoomInfo[] getRooms(String APIKey) {
+    public static ChatRoomInfo[] getRooms(String APIKey) {
         return getRoomHolder(APIKey).rooms;
     }
     
@@ -42,7 +42,7 @@ public class HipchatRoomInfo {
         } catch (Exception e) {
             e.printStackTrace();
             RoomHolder r = new RoomHolder();
-            r.rooms = new HipchatRoomInfo[0];
+            r.rooms = new ChatRoomInfo[0];
             return r;
         }
     }
@@ -85,8 +85,8 @@ public class HipchatRoomInfo {
     
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Room) {
-            Room r = (Room)obj;
+        if (obj instanceof ChatRoom) {
+            ChatRoom r = (ChatRoom)obj;
             if (r.getXMPP_JID().equals(xmpp_jid))
                 return true;
             else if (r.getXMPPName().equals(name)) //In some cases, the XMPPName turns out to be the true name :/
@@ -94,15 +94,15 @@ public class HipchatRoomInfo {
             else
                 return false;
         }
-        if (obj instanceof HipchatRoomInfo) {
-            HipchatRoomInfo r = (HipchatRoomInfo)obj;
+        if (obj instanceof ChatRoomInfo) {
+            ChatRoomInfo r = (ChatRoomInfo)obj;
             return r.name.equals(name) && r.is_private == is_private && r.created == created && r.xmpp_jid.equals(xmpp_jid) && r.last_active == last_active && r.is_archived == is_archived && r.owner_user_id == owner_user_id && r.room_id == room_id && r.topic.equals(topic);
         }
         return false;
     }
     
     private static class RoomHolder {
-        HipchatRoomInfo[] rooms;
+        ChatRoomInfo[] rooms;
         public RoomHolder() { }
     }
 }
