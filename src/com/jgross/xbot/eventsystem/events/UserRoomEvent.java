@@ -15,30 +15,21 @@ public abstract class UserRoomEvent extends RoomEvent {
     }
     
     /**
-     * Get the hipchat user that left the room.
-     * If no API Key is present in the bot, then this method may return null. The only time it will not return null is if
-     * the room was created with an API Key
-     * @return
+     * @return the chat user that left the room.
      */
-    public ChatUser getHipchatUser() {
+    public ChatUser getChatUser() {
         return user;
     }
     
     /**
-     * Return the nickname of this user.
-     * <b>Example</b>
-     * "Bob Joe"
-     * @return
+     * @return the nickname of this user.
      */
     public String getNickname() {
         return nick.split("\\/")[1];
     }
     
     /**
-     * Return the JID of this user
-     * <b>Example:</b>
-     * "11111_111111@chat.hipchat.com"
-     * @return
+     * @return the JID of this user
      */
     public String getJID() {
         return nick;

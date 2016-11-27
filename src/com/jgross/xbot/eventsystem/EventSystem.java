@@ -27,7 +27,7 @@ public class EventSystem {
         for (Map.Entry< Class< ? extends Event >, Set< RegisteredListener > > entry : addMuffins( l ).entrySet()) {
             try {
                 getEventListeners( getRegistrationClass( entry.getKey() ) ).registerAll( entry.getValue() );
-            } catch ( IllegalAccessException e ) {
+            } catch ( IllegalAccessException | NullPointerException e ) {
                 e.printStackTrace();
             }
         }
@@ -39,7 +39,7 @@ public class EventSystem {
             method.setAccessible( true );
             return ( EventList ) method.invoke( null );
         } catch ( Exception e ) {
-        	e.printStackTrace();
+            e.printStackTrace();
             return null;
         }
     }
@@ -74,18 +74,16 @@ public class EventSystem {
             m.setAccessible( true );
             Set<RegisteredListener> events = ret.get( eventClass );
             if ( events == null ) {
-                events = new HashSet< RegisteredListener >();
+                events = new HashSet<>();
                 ret.put( eventClass, events );
             }
-            Executor exe = new Executor() {
-                public void execute( Listener listen, Event e ) {
-                    try {
-                        if ( !eventClass.isAssignableFrom( e.getClass() ) )
-                            return;
-                        m.invoke( listen, e );
-                    } catch ( Exception e1 ) {
-                        e1.printStackTrace();
-                    }
+            Executor exe = (listener, event) -> {
+                try {
+                    if ( !eventClass.isAssignableFrom( event.getClass() ) )
+                        return;
+                    m.invoke(listener, event );
+                } catch ( Exception e ) {
+                    e.printStackTrace();
                 }
             };
             events.add( new RegisteredListener( listen, exe, m.getAnnotation( EventHandler.class ).priority() ) );

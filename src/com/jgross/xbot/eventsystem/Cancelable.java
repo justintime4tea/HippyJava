@@ -3,8 +3,7 @@ package com.jgross.xbot.eventsystem;
 public interface Cancelable {
     
     /**
-     * Check to see if the event is canceled.
-     * @return Weather or not the event is canceled
+     * @return whether or not the event is canceled
      */
     public boolean isCancelled();
     

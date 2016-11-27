@@ -1,6 +1,7 @@
 package com.jgross.xbot.model;
 
 import com.jgross.xbot.networking.Connection;
+import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 
 import java.util.List;
 
@@ -12,16 +13,16 @@ public interface Bot {
     public void receiveMessage(String message, String from, ChatRoom chatRoom);
     
     /**
-     * This method is called after the bot connects and logins.
-     * You can use this method to autojoin a room.
+     * This method is called after the bot connects and logs-in.
+     * You can use this method to auto-join a room.
      */
     public void onLoad();
     
     /**
      * Run this bot, this method should connect and login, and register any events.
-     * @param con
+     * @param connection
      */
-    public void run(Connection con);
+    public void run(Connection connection);
     
     /**
      * Send a message to the currently selected room. You can get the currently
@@ -32,53 +33,49 @@ public interface Bot {
     public void sendMessage(String message);
     
     /**
-     * Send a message to the chatRoom provided. You can also send the message by calling
+     * Send a message to the ChatRoom provided. You can also send the message by calling
      * {@link ChatRoom#sendMessage(String, String)}
      * @param message The body of the message to send
-     * @param chatRoom The chatRoom object to send this message to.
+     * @param chatRoom The ChatRoom object to send this message to.
      */
     public void sendMessage(String message, ChatRoom chatRoom);
     
     /**
-     * Change the currently selected chatRoom. You can get the currently selected chatRoom by
+     * Change the currently selected ChatRoom. You can get the currently selected ChatRoom by
      * calling {@link Bot#getSelectedRoom()}
-     * @param chatRoom The chatRoom object to change to
+     * @param chatRoom The ChatRoom object to change to
      */
     public void changeRoom(ChatRoom chatRoom);
     
     /**
-     * Get the currently selected room
-     * @return The room object that is currently selected
+     * @return The ChatRoom object that is currently selected
      */
     public ChatRoom getSelectedRoom();
     
     /**
-     * Get an unmodifiable list of {@link ChatUser}'s. These users may be offline, online, or may be deleted.
-     * @return
+     * @return an unmodifiable list of {@link ChatUser}'s. These users may be offline, online, or may be deleted.
      */
     public List<ChatUser> getUsers();
     
     /**
-     * The username this bot will login into the server with.
-     * @return
+     * @return username this bot will login into the server with.
      */
     public String username();
     
     /**
-     * This is the nickname the bot will join rooms with.
-     * @return
+     * @return the nickname the bot will join rooms with.
      */
     public String nickname();
     
     /**
-     * The password this bot will use to connect.
-     * @return
+     * @return password this bot will use to connect.
      */
     public String password();
-    
+
+    public XMPPTCPConnectionConfiguration connectionConfig();
+
     /**
-     * Get the connection object that is handling the XMPP API for this bot.
-     * @return
+     * @return the connection object that is handling the XMPP API for this bot.
      */
     public Connection getConnection();
 }

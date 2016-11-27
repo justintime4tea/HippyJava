@@ -1,25 +1,24 @@
 package com.jgross.xbot.model;
 
-import static com.jgross.xbot.utils.Constants.CONF_URL;
+import com.jgross.xbot.XBotLib;
+import com.jgross.xbot.eventsystem.events.model.MessageReceivedEvent;
+import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
+import com.jgross.xbot.eventsystem.events.model.UserLeftRoomEvent;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.muc.RoomInfo;
+import org.jivesoftware.smackx.xdata.Form;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-import com.jgross.xbot.XBotLib;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.RoomInfo;
-import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
-
-import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
-import com.jgross.xbot.eventsystem.events.model.UserLeftRoomEvent;
-
-
 public class ChatRoom {
-    
+
+    private XMPPTCPConnection connection;
     private MultiUserChat chat;
     private RoomInfo info;
     private String subject;
@@ -31,40 +30,39 @@ public class ChatRoom {
     private Thread joinchecker;
     private boolean halt;
     
-    public static ChatRoom createRoom(String name, MultiUserChat chat, XMPPConnection con) {
-        final ChatRoom r = new ChatRoom(name, chat);
+    public static ChatRoom createRoom(String roomName, XMPPTCPConnection connection, boolean persistent) throws XMPPException.XMPPErrorException, SmackException {
+        roomName = roomName.contains("@") ? roomName.substring(0, roomName.lastIndexOf("@")) : roomName;
+        ChatRoom room = new ChatRoom(roomName);
+        MultiUserChatManager chatManager = MultiUserChatManager.getInstanceFor(connection);
+        room.chat = chatManager.getMultiUserChat(roomName + "@conference." + connection.getHost());
+
+        // Create (or join) the room
         try {
-            r.info = MultiUserChat.getRoomInfo(con, (name.indexOf("@") != -1 ? name : name + "@" + CONF_URL));
-        } catch (XMPPException e) {
-            e.printStackTrace();
+            room.chat.createOrJoin(roomName);
+            room.chat.addMessageListener(message -> {
+                MessageReceivedEvent event = new MessageReceivedEvent(room, message);
+                XBotLib.events.callEvent(event);
+            });
+
+        } catch (IllegalStateException e) {
+            // Bot may already have joined the room.
         }
-        r.subject = r.info.getSubject();
-        chat.addSubjectUpdatedListener(new SubjectUpdatedListener() {
-            public void subjectUpdated(String newsubject, String from) {
-                r.subject = newsubject;
-            }
-        });
-        for (String user : r.getConnectedUsers()) {
-            r.users.add(user);
-        }
-        r.startThread();
-        return r;
-    }
-    
-    public static ChatRoom createRoom(String APIKey, String name, MultiUserChat chat, XMPPConnection con) {
-        ChatRoom r = createRoom(name, chat, con);
-        if (APIKey != null && !APIKey.equals(""))
-            r.hinfo = ChatRoomInfo.getInfo(APIKey, r);
-        r.api_cache = APIKey;
-        return r;
-    }
-    
-    public static ChatRoom createRoom(String APIKey, String name) {
-        ChatRoom r = new ChatRoom(name);
-        r.hinfo = ChatRoomInfo.getInfo(APIKey, r);
-        r.subject = r.hinfo.getTopic();
-        r.api_cache = APIKey;
-        return r;
+        // Get the the room's configuration form
+        Form form = room.chat.getConfigurationForm();
+        // Create a new form to submit based on the original form
+        Form submitForm = form.createAnswerForm();
+
+        // Send the completed form (with default values) to the server to configure the room
+        submitForm.setAnswer("muc#roomconfig_membersonly", true);
+        submitForm.setAnswer("muc#roomconfig_allow_subscription", true);
+        submitForm.setAnswer("muc#roomconfig_roomname", roomName);
+        submitForm.setAnswer("muc#roomconfig_persistentroom", persistent);
+
+        room.chat.sendConfigurationForm(submitForm);
+        room.info = chatManager.getRoomInfo(roomName + "@conference." + connection.getHost());
+        room.connection = connection;
+
+        return room;
     }
     
     private ChatRoom(String name, MultiUserChat chat) {
@@ -130,7 +128,7 @@ public class ChatRoom {
      * @return
      */
     public String getXMPP_JID() {
-        return (name.indexOf("@") != -1 ? name : name + "@" + CONF_URL);
+        return (name.indexOf("@") != -1 ? name : name + "@" + connection.getHost());
     }
     
     /**
@@ -215,16 +213,20 @@ public class ChatRoom {
         } catch (XMPPException e) {
             e.printStackTrace();
             return false;
+        } catch (SmackException.NotConnectedException e) {
+            // TODO: Add not connected message
+            e.printStackTrace();
+            return false;
+        } catch (SmackException.NoResponseException e) {
+            // TODO: Add No Response message
+            e.printStackTrace();
+            return false;
         }
         return true;
     }
     
     public List<String> getConnectedUsers() {
-        Iterator<String> temp = chat.getOccupants();
-        List<String> copy = new ArrayList<String>();
-        while (temp.hasNext())
-            copy.add(temp.next());
-        return Collections.unmodifiableList(copy);
+        return Collections.unmodifiableList(chat.getOccupants());
     }
     
     /**
@@ -242,12 +244,22 @@ public class ChatRoom {
         try {
             chat.sendMessage(message);
             return true;
-        } catch (XMPPException e) {
+        } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
         return false;
     }
-    
+
+    public void inviteUsers(List<String> users, String reason) {
+        users.forEach(user -> {
+            try {
+                chat.invite(user, reason);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private class JoinLookout extends Thread {
         
         @Override

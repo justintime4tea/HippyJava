@@ -1,20 +1,19 @@
 package com.jgross.xbot.eventsystem;
 
 import java.util.*;
-import java.util.Map.Entry;
 public class EventList {
 
     private volatile RegisteredListener[] events = null;
 
     private EnumMap< Priority, ArrayList< RegisteredListener > > muffinbag;
 
-    private static ArrayList<EventList> mail = new ArrayList<EventList>();
+    private static ArrayList<EventList> mail = new ArrayList<>();
 
 
     public EventList() {
-        muffinbag = new EnumMap< Priority, ArrayList< RegisteredListener > >(Priority.class);
+        muffinbag = new EnumMap<>(Priority.class);
         for (Priority o : Priority.values()) {
-            muffinbag.put( o, new ArrayList< RegisteredListener >() );
+            muffinbag.put( o, new ArrayList<>() );
         }
         synchronized( mail ) {
             mail.add( this );
@@ -34,9 +33,7 @@ public class EventList {
      * @param listeners listeners to register
      */
     public void registerAll( Collection< RegisteredListener > listeners ) {
-        for ( RegisteredListener listener : listeners ) {
-            register( listener );
-        }
+        listeners.forEach(this::register);
     }
 
     public RegisteredListener[] getRegisteredListeners() {
@@ -48,10 +45,10 @@ public class EventList {
 
     public synchronized void bake() {
         if ( events != null ) return; // don't re-bake when still valid
-        List< RegisteredListener > entries = new ArrayList< RegisteredListener >();
-        for ( Entry< Priority, ArrayList< RegisteredListener > > entry : muffinbag.entrySet() ) {
-            entries.addAll( entry.getValue() );
-        }
+        List< RegisteredListener > entries = new ArrayList<>();
+
+        muffinbag.entrySet().forEach(entry -> entries.addAll(entry.getValue()));
+
         events = entries.toArray( new RegisteredListener[ entries.size() ] );
     }
     

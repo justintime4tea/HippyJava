@@ -12,8 +12,7 @@ public abstract class RoomEvent extends Event {
     }
     
     /**
-     * Get the chatRoom that this event is associated with.
-     * @return
+     * @return the chatRoom that this event is associated with.
      */
     public ChatRoom getChatRoom() {
         return chatRoom;

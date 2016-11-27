@@ -6,14 +6,12 @@ public abstract class Event {
     public Event() { }
     
     /**
-     * Get a list of registered listeners
-     * @return The list of listeners
+     * @return list of registered listeners
      */
     public abstract EventList getEvents();
     
     /**
-     * Get the name of the event
-     * @return The name
+     * @return the name of the event
      */
     public String getEventName() {
         return ( name == null || name.equals( "" ) ) ? getClass().getSimpleName() : name;

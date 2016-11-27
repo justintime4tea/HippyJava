@@ -1,125 +1,92 @@
 package com.jgross.xbot.networking;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-
+import com.jgross.xbot.XBotLib;
+import com.jgross.xbot.eventsystem.events.model.MessageReceivedEvent;
 import com.jgross.xbot.model.ChatRoom;
 import com.jgross.xbot.networking.exceptions.LoginException;
-import com.jgross.xbot.XBotLib;
-import com.jgross.xbot.utils.Constants;
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.Roster;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Body;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 
-import com.jgross.xbot.eventsystem.events.model.MessageRecivedEvent;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.*;
 
-public final class Connection implements MessageListener, ConnectionListener {
-    
-    private static final ConnectionConfiguration CONNECTION_CONFIG = new ConnectionConfiguration(Constants.XMPP_URL, Constants.PORT);
-    private final XMPPConnection XMPP = new XMPPConnection(CONNECTION_CONFIG);
+public final class Connection implements MessageListener, ConnectionListener, ChatMessageListener {
+    //TODO: Replace XMPP_URL and XMPP_PORT predefined constants
+    private static XMPPTCPConnection XMPP;
+    private static XMPPTCPConnectionConfiguration CONNECTION_CONFIG;
     private boolean connected;
     private String password;
     private HashMap<ChatRoom, MultiUserChat> rooms = new HashMap<ChatRoom, MultiUserChat>();
     private HashMap<String, Chat> cache = new HashMap<String, Chat>();
+
+    public Connection(XMPPTCPConnectionConfiguration config) {
+        XMPP = new XMPPTCPConnection(config);
+    }
     
-    public void connect() throws XMPPException {
+    public void connect() throws XMPPException, IOException, SmackException {
         if (connected)
             return;
         XMPP.connect();
         XMPP.addConnectionListener(this);
         connected = true;
+
+        ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(XMPP);
+        reconnectionManager.enableAutomaticReconnection();
     }
     
     public void login(String username, String password) throws LoginException {
         if (!connected)
             return;
-        if (!username.contains("hipchat.com"))
-            System.err.println("[XBotLib] The username being used does not look like a Jabber ID. Are you sure this is the correct username?");
+        if (username.contains("@"))
+            System.err.println("[XBotLib] The username being used looks like a Jabber ID. Try username without @host.domain.com");
         try {
             XMPP.login(username, password);
-        } catch (XMPPException exception) {
-            throw new LoginException("There was an error logging in! Are you using the correct username/password?", exception);
+        } catch (XMPPException | SmackException | IOException exception) {
+            throw new LoginException("There was an error logging in! Are you using the correct username (JID) / password?", exception);
         }
         this.password = password;
     }
     
-    public void sendPM(String message, String to) throws XMPPException {
-        Chat c;
+    public void sendPM(String message, String to) throws XMPPException, SmackException.NotConnectedException {
+        ChatManager chatMan = ChatManager.getInstanceFor(XMPP);
+        Chat chat;
         if (cache.containsKey(to))
-            c = cache.get(to);
+            chat = cache.get(to);
         else {
-            c = XMPP.getChatManager().createChat(to, this);
-            cache.put(to, c);
+            chat = chatMan.createChat(to, this);
+            cache.put(to, chat);
         }
-        c.sendMessage(message);
+        chat.sendMessage(message);
     }
-    
-    public void joinRoom(String room, String nickname) throws XMPPException {
-        joinRoom("", room, nickname);
-    }
-    
-    public void joinRoom(String APIKey, String room, String nickname) throws XMPPException {
-        if (!connected || nickname.equals("") || password.equals("") || rooms.containsKey(room))
-            return;
-        MultiUserChat muc2;
-        if (!isJID(room)) {
-            ChatRoom temp = ChatRoom.createRoom(APIKey, room);
-            room = temp.getHipchatRoomInfo(APIKey).getJID();
-            muc2 = new MultiUserChat(XMPP, room);
-            temp = null;
-        }
-        else
-            muc2 = new MultiUserChat(XMPP, (room.indexOf("@") != -1 ? room : room + "@" + Constants.CONF_URL));
-        muc2.join(nickname, password);
-        final ChatRoom obj = ChatRoom.createRoom(APIKey, room, muc2, XMPP);
-        muc2.addMessageListener(new PacketListener() {
 
-            @Override
-            public void processPacket(Packet paramPacket) {
-                Message m = new Message();
-                m.setBody(toMessage(paramPacket));
-                m.setFrom(paramPacket.getFrom().split("\\/")[1]);
-                MessageRecivedEvent event = new MessageRecivedEvent(obj, m);
-                XBotLib.events.callEvent(event);
-            } 
-        });
-        rooms.put(obj, muc2);
+    public void joinRoom(String host, String room, String nick) throws XMPPException.XMPPErrorException, SmackException {
+        if (!connected || nick.equals("") || password.equals("") || rooms.containsKey(room))
+            return;
+        MultiUserChatManager mucMan = MultiUserChatManager.getInstanceFor(XMPP);
+        MultiUserChat muc = mucMan.getMultiUserChat(room);
+        final ChatRoom chatRoom = ChatRoom.createRoom(room, XMPP, true);
+        rooms.put(chatRoom, muc);
+    }
+
+    public void joinRoom(String room, String nickname) throws XMPPException, SmackException {
+        joinRoom(CONNECTION_CONFIG.getServiceName(), room, nickname);
     }
     
     public List<ChatRoom> getRooms() {
-        ArrayList<ChatRoom> roomlist = new ArrayList<ChatRoom>();
-        for (ChatRoom chatRoom : rooms.keySet()) {
-            roomlist.add(chatRoom);
-        }
+        ArrayList<ChatRoom> roomlist = new ArrayList<>();
+        roomlist.addAll(rooms.keySet());
         return Collections.unmodifiableList(roomlist);
-    }
-    
-    public boolean sendMessageToRoom(String room, String message, String nickname) {
-        if (!rooms.containsKey(room)) {
-            try {
-                joinRoom(room, nickname);
-            } catch (XMPPException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-        ChatRoom obj;
-        if ((obj = findConnectedRoom(room)) != null)
-            return obj.sendMessage(message, nickname);
-        return false;
     }
     
     public ChatRoom findConnectedRoom(String name) {
@@ -142,13 +109,23 @@ public final class Connection implements MessageListener, ConnectionListener {
     }
     
     public Roster getRoster() {
-        return XMPP.getRoster();
+        return Roster.getInstanceFor(XMPP);
     }
     
     @Override
     public void processMessage(Chat arg0, Message arg1) {
-        MessageRecivedEvent event = new MessageRecivedEvent(null, arg1);
+        MessageReceivedEvent event = new MessageReceivedEvent(null, arg1);
         XBotLib.events.callEvent(event);
+    }
+
+    @Override
+    public void connected(XMPPConnection xmppConnection) {
+
+    }
+
+    @Override
+    public void authenticated(XMPPConnection xmppConnection, boolean b) {
+
     }
 
     @Override
@@ -212,5 +189,10 @@ public final class Connection implements MessageListener, ConnectionListener {
             return "";
         }
         
+    }
+
+    @Override
+    public void processMessage(Message message) {
+
     }
 }

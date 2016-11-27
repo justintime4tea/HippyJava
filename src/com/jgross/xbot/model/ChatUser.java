@@ -1,10 +1,6 @@
 package com.jgross.xbot.model;
 
-import com.jgross.xbot.utils.WebUtils;
-
 import java.util.HashMap;
-
-import static com.jgross.xbot.utils.Constants.GSON;
 
 public class ChatUser {
     private int user_id;
@@ -29,6 +25,7 @@ public class ChatUser {
      *        The ChatUser object with the given nick.
      */
     public static ChatUser createInstance(String nick, String APIKey) {
+        // TODO: Replace HipChat with pure XMPP
         if (!user_cache.containsKey(nick)) {
             ChatUser[] users = getHipchatUsers(APIKey);
             for (ChatUser user : users) {
@@ -55,6 +52,7 @@ public class ChatUser {
      *        The ChatUser object with the given user id.
      */
     public static ChatUser createInstance(int ID, String APIKey) {
+        //TODO: Replace HipChat with pure XMPP
         ChatUser[] users = getHipchatUsers(APIKey);
         for (ChatUser user : users) {
             if (user.user_id == ID)
@@ -76,16 +74,18 @@ public class ChatUser {
     }
     
     private static HipchatUserHolder getHipchatUserHolder(String APIKey) {
-        try {
-            String JSON = WebUtils.getTextAsString("https://api.hipchat.com/v1/users/list?format=json&auth_token=" + APIKey);
-            HipchatUserHolder data = GSON.fromJson(JSON, HipchatUserHolder.class);
-            return data;
-        } catch (Exception e) {
-            e.printStackTrace();
-            HipchatUserHolder u = new HipchatUserHolder();
-            u.users = new ChatUser[0];
-            return u;
-        }
+        //TODO: Replace or Remove (HipChat)
+//        try {
+//            String JSON = WebUtils.getTextAsString("https://api.hipchat.com/v1/users/list?format=json&auth_token=" + APIKey);
+//            HipchatUserHolder data = GSON.fromJson(JSON, HipchatUserHolder.class);
+//            return data;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            HipchatUserHolder u = new HipchatUserHolder();
+//            u.users = new ChatUser[0];
+//            return u;
+//        }
+        return null;
     }
     
     private ChatUser() { }
@@ -129,7 +129,11 @@ public class ChatUser {
     public boolean isDeletedAccount() {
         return is_deleted == 1;
     }
-    
+
+    public static ChatUser[] getChatUsers(String s) {
+        return new ChatUser[0];
+    }
+
     private static class HipchatUserHolder {
         public ChatUser[] users;
         public HipchatUserHolder() { }

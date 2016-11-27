@@ -2,9 +2,6 @@ package com.jgross.xbot.model;
 
 import java.util.Date;
 
-import com.jgross.xbot.utils.WebUtils;
-import com.jgross.xbot.utils.Constants;
-
 public class ChatRoomInfo {
     private int room_id;
     private String name;
@@ -35,16 +32,18 @@ public class ChatRoomInfo {
     }
     
     private static RoomHolder getRoomHolder(String APIKey) {
-        try {
-            String JSON = WebUtils.getTextAsString("https://api.hipchat.com/v1/rooms/list?auth_token=" + APIKey);
-            RoomHolder data = Constants.GSON.fromJson(JSON, RoomHolder.class);
-            return data;
-        } catch (Exception e) {
-            e.printStackTrace();
-            RoomHolder r = new RoomHolder();
-            r.rooms = new ChatRoomInfo[0];
-            return r;
-        }
+        //TODO: Replace or remove (HipChat)
+//        try {
+//            String JSON = WebUtils.getTextAsString("https://api.hipchat.com/v1/rooms/list?auth_token=" + APIKey);
+//            RoomHolder data = Constants.GSON.fromJson(JSON, RoomHolder.class);
+//            return data;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            RoomHolder r = new RoomHolder();
+//            r.rooms = new ChatRoomInfo[0];
+//            return r;
+//        }
+        return null;
     }
     
     public String getRoomName() {
