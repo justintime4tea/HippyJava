@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public final class Connection implements MessageListener, ConnectionListener, ChatMessageListener {
+public final class Connection implements ConnectionListener, ChatMessageListener {
 
     private static XMPPTCPConnection XMPP;
     private static XMPPTCPConnectionConfiguration CONNECTION_CONFIG;
@@ -190,10 +190,5 @@ public final class Connection implements MessageListener, ConnectionListener, Ch
             return "";
         }
         
-    }
-
-    @Override
-    public void processMessage(Message message) {
-
     }
 }
