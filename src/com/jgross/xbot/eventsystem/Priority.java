@@ -34,7 +34,7 @@ public enum Priority {
     
     private int important;
     
-    private Priority( int important ) {
+    Priority(int important) {
         this.important = important;
     }
     

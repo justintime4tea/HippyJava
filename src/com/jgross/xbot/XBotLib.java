@@ -35,13 +35,12 @@ public class XBotLib {
      *        The tread object running this bot
      */
     public Thread runBotDysync(final Bot bot) {
-        Thread t = new Thread() {
+        return new Thread() {
             @Override
             public void run() {
                 XBotLib.this.run(bot);
             }
         };
-        return t;
     }
 
     /**

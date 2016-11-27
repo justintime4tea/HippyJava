@@ -5,7 +5,7 @@ public interface Cancelable {
     /**
      * @return whether or not the event is canceled
      */
-    public boolean isCancelled();
+    boolean isCancelled();
     
     /**
      * Cancel the event.
@@ -13,7 +13,7 @@ public interface Cancelable {
      * doing the default action it would normally do.
      * @param cancel If set to true, the event will cancel. If set to false, the event will not cancel
      */
-    public void setCancel( boolean cancel );
+    void setCancel(boolean cancel);
 
 }
 

@@ -7,7 +7,7 @@ public class EventList {
 
     private EnumMap< Priority, ArrayList< RegisteredListener > > muffinbag;
 
-    private static ArrayList<EventList> mail = new ArrayList<>();
+    private static final ArrayList<EventList> mail = new ArrayList<>();
 
 
     public EventList() {

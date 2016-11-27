@@ -9,8 +9,6 @@ import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Message.Body;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -18,8 +16,10 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 public final class Connection implements ConnectionListener, ChatMessageListener {
 
@@ -172,23 +172,5 @@ public final class Connection implements ConnectionListener, ChatMessageListener
             return false;
         }
     }
-    
-    private String toMessage(Packet packet) {
-        try {
-            Field f = packet.getClass().getDeclaredField("bodies");
-            f.setAccessible(true);
-            @SuppressWarnings("rawtypes")
-            HashSet h = (HashSet)f.get(packet);
-            if (h.size() == 0)
-                return "";
-            for (Object obj : h) {
-                if (obj instanceof Body)
-                    return ((Body)obj).getMessage();
-            }
-            return "";
-        } catch (Exception e) {
-            return "";
-        }
-        
-    }
+
 }

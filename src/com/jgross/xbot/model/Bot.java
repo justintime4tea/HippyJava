@@ -10,19 +10,19 @@ public interface Bot {
     /**
      * This method is called whenever a message is received
      */
-    public void receiveMessage(String message, String from, ChatRoom chatRoom);
+    void receiveMessage(String message, String from, ChatRoom chatRoom);
     
     /**
      * This method is called after the bot connects and logs-in.
      * You can use this method to auto-join a room.
      */
-    public void onLoad();
+    void onLoad();
     
     /**
      * Run this bot, this method should connect and login, and register any events.
      * @param connection
      */
-    public void run(Connection connection);
+    void run(Connection connection);
     
     /**
      * Send a message to the currently selected room. You can get the currently
@@ -30,7 +30,7 @@ public interface Bot {
      * selected room by calling {@link Bot#changeRoom(ChatRoom)}
      * @param message The body of the message to send
      */
-    public void sendMessage(String message);
+    void sendMessage(String message);
     
     /**
      * Send a message to the ChatRoom provided. You can also send the message by calling
@@ -38,44 +38,44 @@ public interface Bot {
      * @param message The body of the message to send
      * @param chatRoom The ChatRoom object to send this message to.
      */
-    public void sendMessage(String message, ChatRoom chatRoom);
+    void sendMessage(String message, ChatRoom chatRoom);
     
     /**
      * Change the currently selected ChatRoom. You can get the currently selected ChatRoom by
      * calling {@link Bot#getSelectedRoom()}
      * @param chatRoom The ChatRoom object to change to
      */
-    public void changeRoom(ChatRoom chatRoom);
+    void changeRoom(ChatRoom chatRoom);
     
     /**
      * @return The ChatRoom object that is currently selected
      */
-    public ChatRoom getSelectedRoom();
+    ChatRoom getSelectedRoom();
     
     /**
      * @return an unmodifiable list of {@link ChatUser}'s. These users may be offline, online, or may be deleted.
      */
-    public List<ChatUser> getUsers();
+    List<ChatUser> getUsers();
     
     /**
      * @return username this bot will login into the server with.
      */
-    public String username();
+    String username();
     
     /**
      * @return the nickname the bot will join rooms with.
      */
-    public String nickname();
+    String nickname();
     
     /**
      * @return password this bot will use to connect.
      */
-    public String password();
+    String password();
 
-    public XMPPTCPConnectionConfiguration connectionConfig();
+    XMPPTCPConnectionConfiguration connectionConfig();
 
     /**
      * @return the connection object that is handling the XMPP API for this bot.
      */
-    public Connection getConnection();
+    Connection getConnection();
 }
