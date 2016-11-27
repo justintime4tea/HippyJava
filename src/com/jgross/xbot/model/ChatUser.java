@@ -3,7 +3,7 @@ package com.jgross.xbot.model;
 import java.util.HashMap;
 
 public class ChatUser {
-    private int user_id;
+    private String user_jid;
     private String name;
     private String mention_name;
     private String email;
@@ -14,66 +14,25 @@ public class ChatUser {
     private int is_group_admin;
     private int is_deleted;
     private static HashMap<String, ChatUser> user_cache = new HashMap<String, ChatUser>();
-    
+
     /**
-     * Return the ChatUser object that has the name of <b>nick</b>
-     * @param nick
-     *            The nick to get the users for
-     * @param APIKey
-     *             The API Key to use when using Hipchat's HTTP API
-     * @return
-     *        The ChatUser object with the given nick.
-     */
-    public static ChatUser createInstance(String nick, String APIKey) {
-        // TODO: Replace HipChat with pure XMPP
-        if (!user_cache.containsKey(nick)) {
-            ChatUser[] users = getHipchatUsers(APIKey);
-            for (ChatUser user : users) {
-                if (!user_cache.containsKey(user.name))
-                    user_cache.put(user.name, user);
-            }
-            if (!user_cache.containsKey(nick))
-                return null;
-            else
-                return user_cache.get(nick);
-        }
-        else
-            user_cache.get(nick);
-        return null;
-    }
-    
-    /**
-     * Return the ChatUser object that has the user id of <b>ID</b>
-     * @param ID
-     *            The user id to get the users for
-     * @param APIKey
-     *             The API Key to use when using Hipchat's HTTP API
+     * Return the ChatUser object that has the user JID of <b>userJID</b>
+     * @param userJID
+     *            The user's Jabber ID
      * @return
      *        The ChatUser object with the given user id.
      */
-    public static ChatUser createInstance(int ID, String APIKey) {
+    public static ChatUser createInstance(String userJID) {
         //TODO: Replace HipChat with pure XMPP
-        ChatUser[] users = getHipchatUsers(APIKey);
+        ChatUser[] users = getChatUsers();
         for (ChatUser user : users) {
-            if (user.user_id == ID)
+            if (user.user_jid.equals(userJID))
                 return user;
         }
         return null;
     }
-    
-    /**
-     * Get an array of ChatUser objects that the APIKey passed in the parameter has
-     * access to.
-     * @param APIKey
-     *              The API Key to use
-     * @return
-     *        An array of HipchatUsers
-     */
-    public static ChatUser[] getHipchatUsers(String APIKey) {
-        return getHipchatUserHolder(APIKey).users;
-    }
-    
-    private static HipchatUserHolder getHipchatUserHolder(String APIKey) {
+
+    private static ChatUserHolder getChatUserHolder(String APIKey) {
         //TODO: Replace or Remove (HipChat)
 //        try {
 //            String JSON = WebUtils.getTextAsString("https://api.hipchat.com/v1/users/list?format=json&auth_token=" + APIKey);
@@ -90,8 +49,8 @@ public class ChatUser {
     
     private ChatUser() { }
     
-    public int getUserID() {
-        return user_id;
+    public String getUserJID() {
+        return user_jid;
     }
     
     public String getName() {
@@ -130,12 +89,16 @@ public class ChatUser {
         return is_deleted == 1;
     }
 
-    public static ChatUser[] getChatUsers(String s) {
+    public static ChatUser[] getChatUsers() {
         return new ChatUser[0];
     }
 
-    private static class HipchatUserHolder {
+    public static ChatUser[] getChatUsers(String host) {
+        return new ChatUser[0];
+    }
+
+    private static class ChatUserHolder {
         public ChatUser[] users;
-        public HipchatUserHolder() { }
+        public ChatUserHolder() { }
     }
 }

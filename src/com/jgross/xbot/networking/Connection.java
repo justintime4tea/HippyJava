@@ -76,7 +76,7 @@ public final class Connection implements ConnectionListener, ChatMessageListener
             return;
         MultiUserChatManager mucMan = MultiUserChatManager.getInstanceFor(XMPP);
         MultiUserChat muc = mucMan.getMultiUserChat(room);
-        final ChatRoom chatRoom = ChatRoom.createRoom(room, XMPP, true);
+        final ChatRoom chatRoom = ChatRoom.createRoom(room, XMPP, false);
         rooms.put(chatRoom, muc);
     }
 

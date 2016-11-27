@@ -2,10 +2,9 @@ package com.jgross.xbot.model;
 
 import com.jgross.xbot.XBotLib;
 import com.jgross.xbot.eventsystem.events.model.MessageReceivedEvent;
-import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
-import com.jgross.xbot.eventsystem.events.model.UserLeftRoomEvent;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
@@ -26,8 +25,6 @@ public class ChatRoom {
     private ChatRoomInfo hinfo;
     private ArrayList<String> users = new ArrayList<String>();
     private int lastcount;
-    private String api_cache;
-    private Thread joinchecker;
     private boolean halt;
     
     public static ChatRoom createRoom(String roomName, XMPPTCPConnection connection, boolean persistent) throws XMPPException.XMPPErrorException, SmackException {
@@ -43,7 +40,23 @@ public class ChatRoom {
                 MessageReceivedEvent event = new MessageReceivedEvent(room, message);
                 XBotLib.events.callEvent(event);
             });
+            room.chat.addParticipantListener(presence -> {
+                String chatUserNick = presence.getFrom().substring(presence.getFrom().indexOf("/") + 1, presence.getFrom().length());
 
+                if (presence.getType().equals(Presence.Type.available)) {
+//                    ChatUser chatUser = ChatUser.createInstance(chatUserNick);
+//                    UserJoinedRoomEvent event = new UserJoinedRoomEvent(room, chatUser, chatUserNick);
+//                    XBotLib.events.callEvent(event);
+                }
+                if (presence.getType().equals(Presence.Type.unavailable)) {
+//                    ChatUser chatUser = ChatUser.createInstance(chatUserNick);
+//                    UserLeftRoomEvent event = new UserLeftRoomEvent(room, chatUser, chatUserNick);
+//                    XBotLib.events.callEvent(event);
+                }
+
+
+
+            });
         } catch (IllegalStateException e) {
             // Bot may already have joined the room.
         }
@@ -74,23 +87,7 @@ public class ChatRoom {
         this.name = name;
     }
     
-    private void startThread() {
-        joinchecker = new JoinLookout();
-        joinchecker.start();
-    }
-    
-    private void stopThread() {
-        halt = true;
-        joinchecker.interrupt();
-        try {
-            joinchecker.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-    
     public void disconnect() {
-        stopThread();
         //TODO Disconnect
     }
     
@@ -258,56 +255,6 @@ public class ChatRoom {
                 e.printStackTrace();
             }
         });
-    }
-
-    private class JoinLookout extends Thread {
-        
-        @Override
-        public void run() {
-            ArrayList<String> toremove = new ArrayList<String>();
-            while (isConnected()) {
-                    toremove.clear();
-                    if (halt)
-                        continue;
-                    if (getUserCount() != lastcount) {
-                        List<String> connected = getConnectedUsers();
-                        for (String nick : connected) {
-                            if (!users.contains(nick)) { //connected
-                                ChatUser user = null;
-                                if (api_cache != null && !api_cache.equals(""))
-                                    user = ChatUser.createInstance(nick.split("\\/")[1], api_cache);
-                                users.add(nick);
-                                lastcount = getUserCount();
-                                UserJoinedRoomEvent event = new UserJoinedRoomEvent(ChatRoom.this, user, nick);
-                                XBotLib.events.callEvent(event);
-                            }
-                        }
-
-                        for (String nick : users) {
-                            if (!connected.contains(nick)) { //disconnected
-                                ChatUser user = null;
-                                if (api_cache != null && !api_cache.equals(""))
-                                    user = ChatUser.createInstance(nick.split("\\/")[1], api_cache);
-                                toremove.add(nick);
-                                lastcount = getUserCount();
-                                UserLeftRoomEvent event = new UserLeftRoomEvent(ChatRoom.this, user, nick);
-                                XBotLib.events.callEvent(event);
-                            }
-                        }
-
-                        for (String nick : toremove) {
-                            users.remove(nick);
-                        }
-                    }
-
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                
-            }
-        }
     }
 
 }

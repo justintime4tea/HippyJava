@@ -1,7 +1,12 @@
 package com.jgross.xbot.test;
 
+import com.jgross.xbot.XBotLib;
+import com.jgross.xbot.eventsystem.EventHandler;
+import com.jgross.xbot.eventsystem.Listener;
+import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
 import com.jgross.xbot.model.ChatRoom;
 import com.jgross.xbot.model.XBot;
+import com.jgross.xbot.networking.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
@@ -12,6 +17,18 @@ import java.util.List;
 import java.util.Scanner;
 
 public class TestBot extends XBot {
+
+    @Override
+    public void run(Connection connection) {
+        super.run(connection);
+        XBotLib.events.registerEvents(new Listener() {
+            @SuppressWarnings("unused")
+            @EventHandler
+            public void joinEvent(UserJoinedRoomEvent event) {
+                // TODO: Fix ChatUser class first
+            }
+        });
+    }
 
     @Override
     public void receiveMessage(String message, String from, ChatRoom chatRoom) {
@@ -33,11 +50,11 @@ public class TestBot extends XBot {
 
         List<String> users = new ArrayList<>();
 
-        users.add("user" + "@" + xmppHost());
+        users.add("user_to_invite" + "@" + xmppHost());
 
         boolean b = false;
         try {
-            b = joinRoom("room name");
+            b = joinRoom("RoomName");
         } catch (XMPPException.XMPPErrorException | SmackException e) {
             e.printStackTrace();
         }
@@ -77,7 +94,7 @@ public class TestBot extends XBot {
     public XMPPTCPConnectionConfiguration connectionConfig() {
         return XMPPTCPConnectionConfiguration.builder()
                 .setServiceName(xmppHost())
-                .setSendPresence(false)
+                .setSendPresence(true)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.required)
                 .setHost(xmppHost())
                 .build();
