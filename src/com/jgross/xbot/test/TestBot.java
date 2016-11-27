@@ -37,7 +37,7 @@ public class TestBot extends XBot {
 
         boolean b = false;
         try {
-            b = joinRoom("TestBotLibConversion");
+            b = joinRoom("room name");
         } catch (XMPPException.XMPPErrorException | SmackException e) {
             e.printStackTrace();
         }

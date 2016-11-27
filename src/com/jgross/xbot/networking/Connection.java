@@ -22,7 +22,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 public final class Connection implements MessageListener, ConnectionListener, ChatMessageListener {
-    //TODO: Replace XMPP_URL and XMPP_PORT predefined constants
+
     private static XMPPTCPConnection XMPP;
     private static XMPPTCPConnectionConfiguration CONNECTION_CONFIG;
     private boolean connected;
@@ -32,6 +32,7 @@ public final class Connection implements MessageListener, ConnectionListener, Ch
 
     public Connection(XMPPTCPConnectionConfiguration config) {
         XMPP = new XMPPTCPConnection(config);
+        CONNECTION_CONFIG = config;
     }
     
     public void connect() throws XMPPException, IOException, SmackException {
