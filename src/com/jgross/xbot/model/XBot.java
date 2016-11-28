@@ -107,7 +107,7 @@ public abstract class XBot implements Bot, Listener {
      *        Whether this operation was successful or not.
      */
     public boolean sendPM(String message, String to) {
-        if (to.indexOf("@") == -1) { //oh noes its not a JID! The user didnt follow the rules!
+        if (!to.contains("@")) { //oh noes its not a JID! The user didnt follow the rules!
             ChatUser user = findUser(to);
             if (user != null)
                 to = nickToJID(user.getName());
@@ -170,10 +170,11 @@ public abstract class XBot implements Bot, Listener {
         ArrayList<ChatUser> users = new ArrayList<>();
         if (xmppHost().equals(""))
             return Collections.unmodifiableList(users);
-        ChatUser[] chatUsers = ChatUser.getChatUsers(xmppHost());
-        for (ChatUser user : chatUsers) {
-            users.add(user);
-        }
+        //TODO: Get list of occupants of joined rooms and roster
+//        ChatUser[] chatUsers = ChatUser.getChatUsers(xmppHost());
+//        for (ChatUser user : chatUsers) {
+//            users.add(user);
+//        }
         return Collections.unmodifiableList(users);
     }
     

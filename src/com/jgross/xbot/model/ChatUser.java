@@ -1,50 +1,100 @@
 package com.jgross.xbot.model;
 
-import java.util.HashMap;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smackx.vcardtemp.VCardManager;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 
 public class ChatUser {
     private String user_jid;
     private String name;
-    private String mention_name;
+    private String nickname;
     private String email;
-    private String title;
-    private String photo_url;
+    private String photo;
     private String status;
     private String status_message;
-    private int is_group_admin;
-    private int is_deleted;
-    private static HashMap<String, ChatUser> user_cache = new HashMap<String, ChatUser>();
 
     /**
      * Return the ChatUser object that has the user JID of <b>userJID</b>
+     * @param nickname
+     *            The user's nickname
      * @param userJID
      *            The user's Jabber ID
      * @return
      *        The ChatUser object with the given user id.
      */
-    public static ChatUser createInstance(String userJID) {
-        //TODO: Replace HipChat with pure XMPP
-        ChatUser[] users = getChatUsers();
-        for (ChatUser user : users) {
-            if (user.user_jid.equals(userJID))
-                return user;
-        }
-        return null;
+    public static ChatUser createInstance(String nickname, String userJID) {
+        ChatUser user = new ChatUser();
+        user.nickname = nickname;
+        user.user_jid = userJID;
+        user.name = nickname;
+        return user;
     }
 
-    private static ChatUserHolder getChatUserHolder(String APIKey) {
-        //TODO: Replace or Remove (HipChat)
-//        try {
-//            String JSON = WebUtils.getTextAsString("https://api.hipchat.com/v1/users/list?format=json&auth_token=" + APIKey);
-//            HipchatUserHolder data = GSON.fromJson(JSON, HipchatUserHolder.class);
-//            return data;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            HipchatUserHolder u = new HipchatUserHolder();
-//            u.users = new ChatUser[0];
-//            return u;
-//        }
-        return null;
+    /**
+     * Return the ChatUser object that has the user JID of <b>userJID</b>
+     * @param userJID
+     *            The user's Jabber ID
+     * @param vCard
+     *            The user's vCard
+     * @return
+     *        The ChatUser object with the given user id.
+     */
+    public static ChatUser createInstance(String userJID, VCard vCard) {
+
+        ChatUser user = new ChatUser();
+
+        user.user_jid = userJID;
+        if (vCard.getField("FN") != null) {
+            user.name = vCard.getField("FN");
+        } else if (vCard.getNickName() != null){
+            user.name = vCard.getNickName();
+        } else {
+            user.name = userJID;
+        }
+
+        if (vCard.getEmailHome() != null)
+            user.email = vCard.getEmailHome();
+        else if (vCard.getField("USERID") != null)
+            user.email = vCard.getField("USERID");
+
+        if (vCard.getAvatarHash() != null)
+            user.photo = vCard.getAvatarHash();
+
+        if (vCard.getNickName() != null)
+            user.nickname = vCard.getNickName();
+
+        return user;
+    }
+
+    /**
+     * Return the ChatUser object that has the user JID of <b>userJID</b>
+     * @param userJID
+     *            The user's Jabber ID
+     * @param connection
+     *            XMPPTCPConnection used for getting vCard
+     * @return
+     *        The ChatUser object with the given user id.
+     */
+    public static ChatUser createInstance(String nickname, String userJID, XMPPTCPConnection connection) {
+        ChatUser user;
+
+        VCardManager vCardManager = VCardManager.getInstanceFor(connection);
+        VCard vCard = null;
+
+        try {
+            vCard = vCardManager.loadVCard(userJID);
+        } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+
+        if (null != vCard)
+            user = ChatUser.createInstance(userJID, vCard);
+        else
+            user = ChatUser.createInstance(nickname, userJID);
+
+        return user;
     }
     
     private ChatUser() { }
@@ -57,22 +107,19 @@ public class ChatUser {
         return name;
     }
     
-    public String getMentionName() {
-        return mention_name;
+    public String getNickname() {
+        return nickname;
     }
     
     public String getEmail() {
         return email;
     }
-    
-    public String getTitle() {
-        return title;
+
+    public String getPhoto() {
+        return photo;
     }
-    
-    public String getPhotoUrl() {
-        return photo_url;
-    }
-    
+
+    //TODO: Implement capturing status for user class
     public String getStatus() {
         return status;
     }
@@ -80,25 +127,5 @@ public class ChatUser {
     public String getStatusMessage()  {
         return status_message;
     }
-    
-    public boolean isGroupAdmin() {
-        return is_group_admin == 1;
-    }
-    
-    public boolean isDeletedAccount() {
-        return is_deleted == 1;
-    }
 
-    public static ChatUser[] getChatUsers() {
-        return new ChatUser[0];
-    }
-
-    public static ChatUser[] getChatUsers(String host) {
-        return new ChatUser[0];
-    }
-
-    private static class ChatUserHolder {
-        public ChatUser[] users;
-        public ChatUserHolder() { }
-    }
 }

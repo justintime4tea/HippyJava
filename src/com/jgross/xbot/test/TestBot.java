@@ -4,6 +4,7 @@ import com.jgross.xbot.XBotLib;
 import com.jgross.xbot.eventsystem.EventHandler;
 import com.jgross.xbot.eventsystem.Listener;
 import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
+import com.jgross.xbot.eventsystem.events.model.UserLeftRoomEvent;
 import com.jgross.xbot.model.ChatRoom;
 import com.jgross.xbot.model.XBot;
 import com.jgross.xbot.networking.Connection;
@@ -25,7 +26,15 @@ public class TestBot extends XBot {
             @SuppressWarnings("unused")
             @EventHandler
             public void joinEvent(UserJoinedRoomEvent event) {
-                // TODO: Fix ChatUser class first
+                System.out.println(event.getChatUser().getNickname() + " joined " + event.getChatRoom().getXMPPName());
+            }
+        });
+
+        XBotLib.events.registerEvents(new Listener() {
+            @SuppressWarnings("unused")
+            @EventHandler
+            public void leaveEvent(UserLeftRoomEvent event) {
+                System.out.println(event.getChatUser().getNickname() + " left " + event.getChatRoom().getXMPPName());
             }
         });
     }
@@ -68,7 +77,7 @@ public class TestBot extends XBot {
         else
             System.out.println("I didnt join :(");
         new Thread() {
-            
+
             @Override
             public void run() {
                 final Scanner scan = new Scanner(System.in);

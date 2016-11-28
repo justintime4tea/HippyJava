@@ -2,17 +2,20 @@ package com.jgross.xbot.model;
 
 import com.jgross.xbot.XBotLib;
 import com.jgross.xbot.eventsystem.events.model.MessageReceivedEvent;
+import com.jgross.xbot.eventsystem.events.model.UserJoinedRoomEvent;
+import com.jgross.xbot.eventsystem.events.model.UserLeftRoomEvent;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.muc.Occupant;
 import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.xdata.Form;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public class ChatRoom {
@@ -22,10 +25,8 @@ public class ChatRoom {
     private RoomInfo info;
     private String subject;
     private String name;
-    private ChatRoomInfo hinfo;
-    private ArrayList<String> users = new ArrayList<String>();
-    private int lastcount;
-    private boolean halt;
+    private ChatRoomInfo extendedInfo;
+    private HashMap<String, Occupant> occupants = new HashMap<>();
     
     public static ChatRoom createRoom(String roomName, XMPPTCPConnection connection, boolean persistent) throws XMPPException.XMPPErrorException, SmackException {
         roomName = roomName.contains("@") ? roomName.substring(0, roomName.lastIndexOf("@")) : roomName;
@@ -36,22 +37,42 @@ public class ChatRoom {
         // Create (or join) the room
         try {
             room.chat.createOrJoin(roomName);
+
+            room.chat.getOccupants().forEach(occupant -> {
+                room.occupants.put(room.chat.getOccupant(occupant).getNick(), room.chat.getOccupant(occupant));
+            });
+
             room.chat.addMessageListener(message -> {
                 MessageReceivedEvent event = new MessageReceivedEvent(room, message);
                 XBotLib.events.callEvent(event);
             });
+
             room.chat.addParticipantListener(presence -> {
                 String chatUserNick = presence.getFrom().substring(presence.getFrom().indexOf("/") + 1, presence.getFrom().length());
 
                 if (presence.getType().equals(Presence.Type.available)) {
-//                    ChatUser chatUser = ChatUser.createInstance(chatUserNick);
-//                    UserJoinedRoomEvent event = new UserJoinedRoomEvent(room, chatUser, chatUserNick);
-//                    XBotLib.events.callEvent(event);
+
+                    Occupant occupant = room.chat.getOccupant(presence.getFrom());
+                    room.occupants.put(chatUserNick, occupant);
+
+                    String occJID = occupant.getJid();
+                    occJID = occJID.substring(0, occJID.lastIndexOf("/"));
+
+                    ChatUser chatUser = ChatUser.createInstance(chatUserNick, occJID, connection);
+
+                    UserJoinedRoomEvent event = new UserJoinedRoomEvent(room, chatUser, chatUserNick);
+                    XBotLib.events.callEvent(event);
                 }
+
                 if (presence.getType().equals(Presence.Type.unavailable)) {
-//                    ChatUser chatUser = ChatUser.createInstance(chatUserNick);
-//                    UserLeftRoomEvent event = new UserLeftRoomEvent(room, chatUser, chatUserNick);
-//                    XBotLib.events.callEvent(event);
+                    room.occupants.forEach((key, value) -> {
+                        if (key.equals(chatUserNick)) {
+                            ChatUser chatUser = ChatUser.createInstance(chatUserNick, value.getJid());
+                            UserLeftRoomEvent event = new UserLeftRoomEvent(room, chatUser, chatUserNick);
+                            XBotLib.events.callEvent(event);
+                        }
+                    });
+
                 }
 
 
@@ -137,12 +158,12 @@ public class ChatRoom {
      * @return
      */
     public String getTrueName(String APIKey) {
-        if (hinfo == null) {
-            hinfo = ChatRoomInfo.getInfo(APIKey, this);
-            if (hinfo == null)
+        if (extendedInfo == null) {
+            extendedInfo = ChatRoomInfo.getInfo(APIKey, this);
+            if (extendedInfo == null)
                 return null;
         }
-        return hinfo.getRoomName();
+        return extendedInfo.getRoomName();
     }
     
     /**
@@ -150,9 +171,9 @@ public class ChatRoom {
      * @return
      */
     public String getTrueName() {
-        if (hinfo == null)
+        if (extendedInfo == null)
             return null;
-        return hinfo.getRoomName();
+        return extendedInfo.getRoomName();
     }
     
     /**
@@ -160,7 +181,7 @@ public class ChatRoom {
      * @return
      */
     public ChatRoomInfo getHipchatRoomInfo() {
-        return hinfo;
+        return extendedInfo;
     }
     
     /**
@@ -172,12 +193,12 @@ public class ChatRoom {
      * @return
      */
     public ChatRoomInfo getHipchatRoomInfo(String APIKey) {
-        if (hinfo == null) {
-            hinfo = ChatRoomInfo.getInfo(APIKey, this);
-            if (hinfo == null)
+        if (extendedInfo == null) {
+            extendedInfo = ChatRoomInfo.getInfo(APIKey, this);
+            if (extendedInfo == null)
                 return null;
         }
-        return hinfo;
+        return extendedInfo;
     }
     
     /**
@@ -190,8 +211,8 @@ public class ChatRoom {
         if (subject == null || subject.equals("")) {
             if (info != null)
                 subject = info.getSubject();
-            else if (hinfo != null)
-                subject = hinfo.getTopic();
+            else if (extendedInfo != null)
+                subject = extendedInfo.getTopic();
         }
         return subject;
     }
