@@ -6,20 +6,20 @@ XBotLib is a Java library for making bots for [XMPP][1]. It uses the [Smack API 
 This is a conversion of HippyJava by [hypereddie][4] to a pure XMPP based chat bot library. 
 Much appreciation and thanks goes to [hypereddie][4] who is the original author of the work this project is based off of.
 
-##Current Features [WIP]
+## Current Features [WIP]
 * Multi-room Chatting [XMPP]
 * Private Messaging [XMPP / HTTP]
 * Retrieving User Data [HTTP]
 * Notification Sending [HTTP]
 
-##Getting Started/How-To [Updates coming]
+## Getting Started/How-To [Updates coming]
 You can check out the [wiki][3] for tutorials/how-to's
 
-##Contributing
+## Contributing
 If you would like to contribute to this project, simply fork the repo and send a pull request.
 Please test your pull request and please try to keep your code neat.
 
-##Building the Source
+## Building the Source
 The source has a maven script for required dependencies, so just run 'mvn clean install' in the project folder.
 
 [1]: https://xmpp.org/
